@@ -51,18 +51,24 @@ def show_landing():
             background-color: #0052a3;
         }
         
-        /* Style for secondary button (Register) - Purple */
+        /* Style for secondary button (Register) - Dark with border */
         div[data-testid="stButton"] button[kind="secondary"] {
-            background-color: #7c3aed;
+            background-color: transparent;
             color: white;
-            border: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 8px;
             padding: 12px 24px;
             font-size: 16px;
             font-weight: 500;
         }
         div[data-testid="stButton"] button[kind="secondary"]:hover {
-            background-color: #6d28d9;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        /* Add spacing between buttons */
+        div[data-testid="stButton"] {
+            margin-bottom: 1rem;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -84,6 +90,8 @@ def show_landing():
         if st.button("Log in", type="primary", use_container_width=True):
             st.session_state.current_view = "login"
             st.rerun()
+        
+        st.write("")  # Add extra spacing between buttons
         
         # Register button with custom styling
         if st.button("Register", use_container_width=True):
