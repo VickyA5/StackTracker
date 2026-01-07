@@ -27,8 +27,8 @@ init_session_state()
 if not st.session_state.authenticated:
     st.warning("Please log in to access the dashboard.")
     if st.button("Go to Login", type="primary"):
-        st.session_state.current_page = "Login"
-        st.switch_page("pages/Login")
+        st.session_state.current_view = "login"
+        st.switch_page("Login.py")
     st.stop()
 
 # Sidebar: placeholders for suppliers navigation
@@ -42,9 +42,9 @@ selected_supplier = st.sidebar.selectbox(
 if st.sidebar.button("Log out"):
     st.session_state.authenticated = False
     st.session_state.jwt_token = None
-    st.session_state.current_page = "Landing"
+    st.session_state.current_view = "landing"
     st.info("Logged out. Returning to landing page...")
-    st.switch_page("streamlit_app")
+    st.switch_page("Login.py")
 
 st.title("Dashboard")
 st.write(f"Current supplier: {selected_supplier}")
