@@ -28,28 +28,67 @@ init_session_state()
 
 
 def show_landing():
-    # Centered title and description
+    # Add custom CSS for better centering and styling
+    st.markdown("""
+        <style>
+        /* Center content with better spacing */
+        .main .block-container {
+            max-width: 800px;
+            padding-top: 3rem;
+        }
+        
+        /* Style for primary button (Login) - Blue */
+        div[data-testid="stButton"] button[kind="primary"] {
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        div[data-testid="stButton"] button[kind="primary"]:hover {
+            background-color: #0052a3;
+        }
+        
+        /* Style for secondary button (Register) - Purple */
+        div[data-testid="stButton"] button[kind="secondary"] {
+            background-color: #7c3aed;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        div[data-testid="stButton"] button[kind="secondary"]:hover {
+            background-color: #6d28d9;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+    
+    # Centered title and description with better spacing
     st.markdown(
-        "<h1 style='text-align:center;'>Welcome to StackTracker</h1>",
+        "<h1 style='text-align:center; margin-bottom: 1rem;'>Welcome to StackTracker</h1>",
         unsafe_allow_html=True,
     )
     st.markdown(
-        "<p style='text-align:center;'>Manage multiple suppliers, upload stock Excel files, and compare changes.</p>",
+        "<p style='text-align:center; margin-bottom: 2rem; font-size: 1.1rem;'>Manage multiple suppliers, upload stock Excel files, and compare changes.</p>",
         unsafe_allow_html=True,
     )
 
-    # Center the buttons using columns
-    left_spacer, center_col, right_spacer = st.columns([1, 1, 1])
+    # Center the buttons using columns with vertical stacking
+    left_spacer, center_col, right_spacer = st.columns([1, 2, 1])
     with center_col:
-        b1, b2 = st.columns([1, 1])
-        with b1:
-            if st.button("Log in", type="primary"):
-                st.session_state.current_view = "login"
-                st.rerun()
-        with b2:
-            if st.button("Register"):
-                st.session_state.current_view = "register"
-                st.rerun()
+        # Login button with custom styling
+        if st.button("Log in", type="primary", use_container_width=True):
+            st.session_state.current_view = "login"
+            st.rerun()
+        
+        # Register button with custom styling
+        if st.button("Register", use_container_width=True):
+            st.session_state.current_view = "register"
+            st.rerun()
 
     st.divider()
 
