@@ -5,9 +5,9 @@ from pydantic import BaseModel, Field, ConfigDict
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from database.session import get_db
-from models.user import User
-from service.auth import hash_password
+from ..database.session import get_db
+from ..models.user import User
+from ..service.auth import hash_password
 
 
 router = APIRouter()

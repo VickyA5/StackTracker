@@ -47,7 +47,7 @@ def get_db() -> Generator:
 
 async def init_db() -> None:
 	# Import models to register them with Base.metadata
-	from models import user  # noqa: F401
+	from ..models import user  # noqa: F401
 	logger.info("Initializing database and creating tables if absent")
 	Base.metadata.create_all(bind=engine)
 

@@ -1,19 +1,10 @@
 import logging
-import os
-import sys
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
 
-# Ensure src/ is on the Python path so imports work when running directly
-BASE_DIR = os.path.dirname(__file__)
-SRC_DIR = os.path.join(BASE_DIR, "src")
-if SRC_DIR not in sys.path:
-    sys.path.append(SRC_DIR)
-
-from database.session import dispose_engine, init_db  # type: ignore
-from routers.users import router as users_router  # type: ignore
+from .database.session import dispose_engine, init_db
+from .routers.users import router as users_router
 
 
 logging.basicConfig(level=logging.INFO)
@@ -23,10 +14,8 @@ api_logger.setLevel(logging.INFO)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # --- startup ---
     await init_db()
     yield
-    # --- shutdown ---
     await dispose_engine()
 
 
@@ -39,7 +28,7 @@ def create_app() -> FastAPI:
     @app.get("/")
     def read_root():
         return {"message": "StackTracker up"}
-    
+
     @app.get("/health")
     async def health():
         logging.getLogger("app").debug("Health endpoint accessed")
@@ -47,7 +36,6 @@ def create_app() -> FastAPI:
 
     logger = logging.getLogger("api")
     logger.info("API initialized")
-   
     return app
 
 
