@@ -20,7 +20,7 @@ def configure_test_database():
 @pytest.fixture()
 def client():
     # Import here so DATABASE_URL is already set
-    from back.main import app
+    from back.src.main import app
     # Use context manager to ensure startup/shutdown (lifespan) runs
     with TestClient(app) as c:
         yield c
