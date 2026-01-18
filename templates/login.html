@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2 style="margin-top:0">Log in</h2>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <div>
+      <label for="id_username">Username</label>
+      {{ form.username }}
+      {% if form.username.errors %}
+        <div class="field-errors">{{ form.username.errors|join:', ' }}</div>
+      {% endif %}
+    </div>
+    <div>
+      <label for="id_password">Password</label>
+      {{ form.password }}
+      {% if form.password.errors %}
+        <div class="field-errors">{{ form.password.errors|join:', ' }}</div>
+      {% endif %}
+    </div>
+    <button class="btn" type="submit">Log in</button>
+  </form>
+{% endblock %}
