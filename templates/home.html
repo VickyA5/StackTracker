@@ -1,16 +1,21 @@
 {% extends 'base.html' %}
+{% block body_class %}centered-viewport{% endblock %}
 {% block content %}
-  <h1 style="margin-top:0">Welcome</h1>
-  {% if user.is_authenticated %}
-    <p>You are logged in as <strong>{{ user.username }}</strong>.</p>
-    <div class="stack">
-      <a class="btn secondary" href="{% url 'logout' %}">Logout</a>
-    </div>
-  {% else %}
-    <p>Choose an option to continue:</p>
-    <div class="stack">
-      <a class="btn" href="{% url 'register' %}">Register</a>
-      <a class="btn secondary" href="{% url 'login' %}">Log in</a>
-    </div>
-  {% endif %}
+  <div class="centered">
+    <h1 style="margin-top:0">Welcome to StackTracker</h1>
+    {% if user.is_authenticated %}
+      <p>You are logged in as <strong>{{ user.username }}</strong>.</p>
+      <div class="stack vstack" style="margin-top:12px;">
+        <a class="btn secondary" href="{% url 'logout' %}">Logout</a>
+      </div>
+    {% else %}
+      <p>Choose an option to continue:</p>
+      <div class="stack vstack" style="margin-top:12px;">
+        <a class="btn" href="{% url 'register' %}">Register</a>
+        <a class="btn secondary" href="{% url 'login' %}">Log in</a>
+      </div>
+    {% endif %}
+  </div>
 {% endblock %}
+
+{% block header %}{% endblock %}
