@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="centered">
+    <h1 style="margin-top:0">Application Main Page</h1>
+    <p class="subtitle">This is the main application placeholder. Replace with your real dashboard later.</p>
+    <div style="margin-top:24px;">
+      <a class="btn" href="{% url 'home' %}">Go to Home</a>
+      <a class="btn secondary" href="{% url 'logout' %}">Logout</a>
+    </div>
+  </div>
+{% endblock %}

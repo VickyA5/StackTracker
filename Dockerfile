@@ -8,11 +8,17 @@ WORKDIR /app
 
 # Install system deps (psycopg2 build deps)
 RUN apt-get update && apt-get install -y build-essential libpq-dev && rm -rf /var/lib/apt/lists/*
+# Make sure shell tools are available for entrypoint (optional)
+RUN apt-get update && apt-get install -y build-essential libpq-dev procps && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . /app
+
+# Copy and make entrypoint executable
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 # Expose port
 EXPOSE 8000
@@ -26,5 +32,5 @@ ENV DJANGO_DEBUG=True \
     DB_HOST=db \
     DB_PORT=5432
 
-# Do not run migrations automatically per user request
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

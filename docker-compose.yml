@@ -36,6 +36,7 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
+    # The image entrypoint runs migrations and then starts the server
     command: python manage.py runserver 0.0.0.0:8000
 
 volumes:

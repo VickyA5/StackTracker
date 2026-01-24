@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import redirect, render
+from django.urls import reverse_lazy
 from django.views.generic import TemplateView, FormView
 
 logger = logging.getLogger(__name__)
@@ -15,7 +16,7 @@ class HomeView(TemplateView):
 class RegisterView(FormView):
 	template_name = 'register.html'
 	form_class = UserCreationForm
-	success_url = '/'
+	success_url = reverse_lazy('dashboard')
 
 	def form_valid(self, form):
 		try:
@@ -32,3 +33,7 @@ class RegisterView(FormView):
 	def form_invalid(self, form):
 		messages.error(self.request, 'Please fix the form errors and try again.')
 		return render(self.request, self.template_name, {'form': form})
+
+
+class DashboardView(TemplateView):
+	template_name = 'dashboard.html'
