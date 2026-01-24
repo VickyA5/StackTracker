@@ -3,7 +3,9 @@
 {% block header %}{% endblock %}
 {% block content %}
   <div class="centered">
-    <h2 style="margin-top:0">Create account</h2>
+    <h1 style="margin-top:0">StackTracker</h1>
+    <p class="subtitle">Create an account to start tracking stock and price changes from your suppliers.</p>
+    <h2 style="margin-top:8px">Create account</h2>
     <form method="post" novalidate>
       {% csrf_token %}
       {{ form.non_field_errors }}
