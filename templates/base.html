@@ -53,7 +53,10 @@
       {% if user.is_authenticated %}
         <span>Hello, {{ user.username }}</span>
         <span style="margin:0 8px; color:#374151">|</span>
-        <a href="{% url 'logout' %}">Logout</a>
+        <form method="post" action="{% url 'logout' %}" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="btn secondary" style="vertical-align:middle;">Logout</button>
+        </form>
       {% else %}
         <a href="{% url 'login' %}">Log in</a>
         <span style="margin:0 8px; color:#374151">|</span>

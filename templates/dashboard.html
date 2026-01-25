@@ -3,9 +3,12 @@
   <div class="centered">
     <h1 style="margin-top:0">Application Main Page</h1>
     <p class="subtitle">This is the main application placeholder. Replace with your real dashboard later.</p>
-    <div style="margin-top:24px;">
+    <div style="margin-top:24px; display:flex; gap:12px; justify-content:center;">
       <a class="btn" href="{% url 'home' %}">Go to Home</a>
-      <a class="btn secondary" href="{% url 'logout' %}">Logout</a>
+      <form method="post" action="{% url 'logout' %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn secondary">Logout</button>
+      </form>
     </div>
   </div>
 {% endblock %}

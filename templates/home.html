@@ -8,7 +8,10 @@
       <p>You are logged in as <strong>{{ user.username }}</strong>.</p>
       <div class="stack vstack" style="margin-top:12px;">
         <a class="btn" href="{% url 'dashboard' %}">Go to Dashboard</a>
-        <a class="btn secondary" href="{% url 'logout' %}">Logout</a>
+        <form method="post" action="{% url 'logout' %}" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="btn secondary">Logout</button>
+        </form>
       </div>
     {% else %}
       <p>Choose an option to continue:</p>
