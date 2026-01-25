@@ -43,6 +43,12 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 	login_url = reverse_lazy('welcome')
 	template_name = 'home.html'
 
+	def get_context_data(self, **kwargs):
+		context = super().get_context_data(**kwargs)
+		# include only the current user's suppliers for display on home
+		context['suppliers'] = Supplier.objects.filter(owner=self.request.user).order_by('-updated_at', '-created_at')
+		return context
+
 
 class SupplierListView(LoginRequiredMixin, ListView):
 	model = Supplier

@@ -1,10 +1,26 @@
 {% extends 'base.html' %}
 {% block content %}
   <div class="centered">
-    <h1 style="margin-top:0">Application Main Page</h1>
-    <p class="subtitle">This is the main application placeholder. Replace with your real dashboard later.</p>
+    <h1 style="margin-top:0">Welcome, {{ user.username }}</h1>
+    <p class="subtitle">You can add a new supplier or select an existing one to compare stock levels.</p>
     <div style="margin-top:24px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
-      <a class="btn" href="{% url 'supplier_list' %}">Manage Suppliers</a>
+      <a class="btn" href="{% url 'supplier_create' %}">Create Supplier</a>
+    </div>
+    <hr style="margin-top:20px; border-color:#1f2937;" />
+    <div style="margin-top:12px;">
+      {% if suppliers %}
+        <h3 style="margin-bottom:8px">Your suppliers</h3>
+        <ul>
+          {% for s in suppliers %}
+            <li style="margin-bottom:10px;">
+              <strong>{{ s.name }}</strong>
+              <div class="muted">Product ID: {{ s.product_id_column }} | Stock: {{ s.stock_column }}{% if s.price_column %} | Price: {{ s.price_column }}{% endif %}</div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>No suppliers yet. Use "Create Supplier" to add one.</p>
+      {% endif %}
     </div>
   </div>
   {% endblock %}
