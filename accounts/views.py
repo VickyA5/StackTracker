@@ -39,8 +39,9 @@ class RegisterView(FormView):
 		return render(self.request, self.template_name, {'form': form})
 
 
-class DashboardView(TemplateView):
-    template_name = 'home.html'
+class DashboardView(LoginRequiredMixin, TemplateView):
+	login_url = reverse_lazy('welcome')
+	template_name = 'home.html'
 
 
 class SupplierListView(LoginRequiredMixin, ListView):

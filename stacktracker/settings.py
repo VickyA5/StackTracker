@@ -126,7 +126,7 @@ STATIC_URL = 'static/'
 # Authentication redirects
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'
-LOGOUT_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'welcome'
 
 # Basic logging configuration
 LOGGING = {
