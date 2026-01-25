@@ -20,6 +20,7 @@ This repo includes a minimal Django app with:
 
 ```bash
 # Build and start Postgres + Django app
+chmod +x entrypoint.sh
 docker compose up --build
 
 # App will be available at
