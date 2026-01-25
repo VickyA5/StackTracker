@@ -1,8 +1,11 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block body_class %}centered-viewport{% endblock %}
 {% block content %}
   <div class="centered">
-    <h1 style="margin-top:0">StackTracker</h1>
+    <a href="{% url 'welcome' %}">
+      <img src="{% static 'stacktracker.png' %}" alt="StackTracker" style="max-width:360px; height:auto; display:block; margin:0 auto 12px;">
+    </a>
     <p class="subtitle">Monitor stock and price changes across multiple suppliers. Upload daily files and track additions, removals, and price updates.</p>
     {% if user.is_authenticated %}
       <p>You are logged in as <strong>{{ user.username }}</strong>.</p>

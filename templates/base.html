@@ -1,3 +1,4 @@
+{% load static %}
 <!doctype html>
 <html lang="en">
 <head>
@@ -48,7 +49,11 @@
 <body class="{% block body_class %}{% endblock %}">
   {% block header %}
   <header>
-    <div><strong>StackTracker</strong></div>
+    <div>
+      <a href="{% url 'welcome' %}">
+        <img src="{% static 'stacktracker.png' %}" alt="StackTracker" style="height:64px; display:block; max-width:360px;">
+      </a>
+    </div>
     <nav>
       {% if user.is_authenticated %}
         <span>Hello, {{ user.username }}</span>
