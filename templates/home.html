@@ -1,26 +1,15 @@
 {% extends 'base.html' %}
-{% block body_class %}centered-viewport{% endblock %}
 {% block content %}
   <div class="centered">
-    <h1 style="margin-top:0">StackTracker</h1>
-    <p class="subtitle">Monitor stock and price changes across multiple suppliers. Upload daily files and track additions, removals, and price updates.</p>
-    {% if user.is_authenticated %}
-      <p>You are logged in as <strong>{{ user.username }}</strong>.</p>
-      <div class="stack vstack" style="margin-top:12px;">
-        <a class="btn" href="{% url 'dashboard' %}">Go to Dashboard</a>
-        <form method="post" action="{% url 'logout' %}" style="display:inline;">
-          {% csrf_token %}
-          <button type="submit" class="btn secondary">Logout</button>
-        </form>
-      </div>
-    {% else %}
-      <p>Choose an option to continue:</p>
-      <div class="stack vstack" style="margin-top:12px;">
-        <a class="btn" href="{% url 'register' %}">Register</a>
-        <a class="btn secondary" href="{% url 'login' %}">Log in</a>
-      </div>
-    {% endif %}
+    <h1 style="margin-top:0">Application Main Page</h1>
+    <p class="subtitle">This is the main application placeholder. Replace with your real dashboard later.</p>
+    <div style="margin-top:24px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+      <a class="btn" href="{% url 'supplier_list' %}">Manage Suppliers</a>
+      <a class="btn" href="{% url 'welcome' %}">Back to Welcome</a>
+      <form method="post" action="{% url 'logout' %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn secondary">Logout</button>
+      </form>
+    </div>
   </div>
-{% endblock %}
-
-{% block header %}{% endblock %}
+  {% endblock %}

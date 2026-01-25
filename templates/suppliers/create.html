@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Supplier{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h2>Add Supplier</h2>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <div class="vstack">
+      {{ form.name.label_tag }}
+      {{ form.name }}
+
+      {{ form.product_id_column.label_tag }}
+      {{ form.product_id_column }}
+
+      {{ form.stock_column.label_tag }}
+      {{ form.stock_column }}
+
+      {{ form.price_column.label_tag }}
+      {{ form.price_column }}
+
+      {{ form.current_file.label_tag }}
+      {{ form.current_file }}
+
+      <button class="btn" type="submit">Create</button>
+      <a class="btn secondary" href="{% url 'supplier_list' %}">Back</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

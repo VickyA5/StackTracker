@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}My Suppliers{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h2>My Suppliers</h2>
+  <div class="vstack">
+    <a class="btn" href="{% url 'supplier_create' %}">Add Supplier</a>
+  </div>
+  <hr />
+  {% if suppliers %}
+    <ul>
+      {% for s in suppliers %}
+        <li>
+          <strong>{{ s.name }}</strong>
+          <div class="muted">Product ID column: {{ s.product_id_column }} | Stock column: {{ s.stock_column }}{% if s.price_column %} | Price column: {{ s.price_column }}{% endif %}</div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No suppliers yet. Create one to get started.</p>
+  {% endif %}
+</div>
+{% endblock %}
