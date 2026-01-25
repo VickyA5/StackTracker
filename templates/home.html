@@ -7,6 +7,7 @@
     {% if user.is_authenticated %}
       <p>You are logged in as <strong>{{ user.username }}</strong>.</p>
       <div class="stack vstack" style="margin-top:12px;">
+        <a class="btn" href="{% url 'dashboard' %}">Go to Dashboard</a>
         <a class="btn secondary" href="{% url 'logout' %}">Logout</a>
       </div>
     {% else %}
