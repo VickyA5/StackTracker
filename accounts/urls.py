@@ -7,6 +7,7 @@ from .views import (
     SupplierListView,
     SupplierCreateView,
     SupplierUploadView,
+    ComparisonResultView,
 )
 
 urlpatterns = [
@@ -18,4 +19,5 @@ urlpatterns = [
     path('suppliers/', SupplierListView.as_view(), name='supplier_list'),
     path('suppliers/create/', SupplierCreateView.as_view(), name='supplier_create'),
     path('suppliers/<int:pk>/upload/', SupplierUploadView.as_view(), name='supplier_upload'),
+    path('suppliers/<int:pk>/comparison/', ComparisonResultView.as_view(), name='supplier_comparison'),
 ]

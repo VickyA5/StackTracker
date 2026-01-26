@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load display %}
+{% block content %}
+<div>
+  <h2 style="margin-top:0">Comparison for {{ supplier.name }}</h2>
+  <p class="subtitle">Scroll through each section to review changes.</p>
+  <div style="display:grid; grid-template-columns: 1fr; gap: 16px;">
+    <!-- Removed / Out of Stock -->
+    <section class="card" style="padding:16px;">
+      <h3 style="margin-top:0;">Removed / Out of Stock ({{ removed_or_out_of_stock|length }})</h3>
+      <div style="max-height:220px; overflow:auto; border:1px solid #1f2937; border-radius:8px;">
+        {% if removed_or_out_of_stock %}
+          <table style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr>
+                <th style="text-align:left; padding:8px;">ID</th>
+                <th style="text-align:left; padding:8px;">Old Stock</th>
+                <th style="text-align:left; padding:8px;">New Stock</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in removed_or_out_of_stock %}
+                <tr>
+                  <td style="padding:8px;">{{ row.id|safeval }}</td>
+                  <td style="padding:8px;">{{ row.old_stock|safeval }}</td>
+                  <td style="padding:8px;">{{ row.new_stock|safeval }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <div class="muted" style="padding:12px;">No items removed or out of stock.</div>
+        {% endif %}
+      </div>
+    </section>
+
+    <!-- New Products -->
+    <section class="card" style="padding:16px;">
+      <h3 style="margin-top:0;">New Products ({{ new_products|length }})</h3>
+      <div style="max-height:220px; overflow:auto; border:1px solid #1f2937; border-radius:8px;">
+        {% if new_products %}
+          <table style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr>
+                <th style="text-align:left; padding:8px;">ID</th>
+                <th style="text-align:left; padding:8px;">Stock</th>
+                <th style="text-align:left; padding:8px;">Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in new_products %}
+                <tr>
+                  <td style="padding:8px;">{{ row.id|safeval }}</td>
+                  <td style="padding:8px;">{{ row.stock|safeval }}</td>
+                  <td style="padding:8px;">{{ row.price|safeval }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <div class="muted" style="padding:12px;">No new products.</div>
+        {% endif %}
+      </div>
+    </section>
+
+    <!-- Stock Changes -->
+    <section class="card" style="padding:16px;">
+      <h3 style="margin-top:0;">Stock Changes ({{ stock_changes|length }})</h3>
+      <div style="max-height:220px; overflow:auto; border:1px solid #1f2937; border-radius:8px;">
+        {% if stock_changes %}
+          <table style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr>
+                <th style="text-align:left; padding:8px;">ID</th>
+                <th style="text-align:left; padding:8px;">Old Stock</th>
+                <th style="text-align:left; padding:8px;">New Stock</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in stock_changes %}
+                <tr>
+                  <td style="padding:8px;">{{ row.id|safeval }}</td>
+                  <td style="padding:8px;">{{ row.old_stock|safeval }}</td>
+                  <td style="padding:8px;">{{ row.new_stock|safeval }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <div class="muted" style="padding:12px;">No stock changes.</div>
+        {% endif %}
+      </div>
+    </section>
+
+    <!-- Price Changes -->
+    <section class="card" style="padding:16px;">
+      <h3 style="margin-top:0;">Price Changes ({{ price_changes|length }})</h3>
+      <div style="max-height:220px; overflow:auto; border:1px solid #1f2937; border-radius:8px;">
+        {% if price_changes %}
+          <table style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr>
+                <th style="text-align:left; padding:8px;">ID</th>
+                <th style="text-align:left; padding:8px;">Old Price</th>
+                <th style="text-align:left; padding:8px;">New Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in price_changes %}
+                <tr>
+                  <td style="padding:8px;">{{ row.id|safeval }}</td>
+                  <td style="padding:8px;">{{ row.old_price|safeval }}</td>
+                  <td style="padding:8px;">{{ row.new_price|safeval }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <div class="muted" style="padding:12px;">No price changes.</div>
+        {% endif %}
+      </div>
+    </section>
+  </div>
+  <div style="margin-top:12px;">
+    <a class="btn secondary" href="{% url 'home' %}">Back to Home</a>
+  </div>
+</div>
+{% endblock %}

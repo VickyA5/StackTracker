@@ -95,6 +95,14 @@ def normalize_columns(
 
     # Default missing stock to 0
     out['stock'] = out['stock'].fillna(0)
+
+    # Deduplicate IDs: aggregate stock and keep last price if present
+    if out['id'].duplicated().any():
+        logger.info("Duplicate product IDs detected; aggregating by id.")
+        agg = {'stock': 'sum'}
+        if 'price' in out.columns:
+            agg['price'] = 'last'
+        out = out.groupby('id', as_index=False).agg(agg)
     if 'price' in out.columns:
         out['price'] = pd.to_numeric(out['price'], errors='coerce')
 

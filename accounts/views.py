@@ -141,12 +141,56 @@ class SupplierUploadView(LoginRequiredMixin, View):
 			messages.error(request, 'Failed to save uploaded file.')
 			return render(request, self.template_name, {'form': form, 'supplier': supplier})
 
-		# For now, just notify and redirect; results can be used later in UI
-		messages.success(request, 'File uploaded and comparison completed.')
-		request.session['last_comparison_summary'] = {
-			'removed_or_out_of_stock': int(len(comparison['removed_or_out_of_stock'])),
-			'new_products': int(len(comparison['new_products'])),
-			'stock_changes': int(len(comparison['stock_changes'])),
-			'price_changes': int(len(comparison['price_changes'])),
+		# Prepare data for UI: convert DataFrames to records for session storage
+		def df_records(df):
+			try:
+				records = df.to_dict('records')
+				# Sanitize NaN/None to ensure session JSON serialization and clean UI rendering
+				def clean_val(v):
+					try:
+						# Convert NaN-like to None
+						if v is None:
+							return None
+						sv = str(v).strip().lower()
+						if sv in ('nan', '<na>'):
+							return None
+						return v
+					except Exception:
+						return None
+				return [
+					{k: clean_val(v) for k, v in rec.items()}
+					for rec in records
+				]
+			except Exception:
+				return []
+
+		request.session['comparison_results'] = {
+			'supplier_id': supplier.id,
+			'supplier_name': supplier.name,
+			'removed_or_out_of_stock': df_records(comparison['removed_or_out_of_stock']),
+			'new_products': df_records(comparison['new_products']),
+			'stock_changes': df_records(comparison['stock_changes']),
+			'price_changes': df_records(comparison['price_changes']),
 		}
-		return redirect('home')
+		messages.success(request, 'File uploaded and comparison completed.')
+		return redirect('supplier_comparison', pk=supplier.id)
+
+
+class ComparisonResultView(LoginRequiredMixin, View):
+	template_name = 'suppliers/comparison.html'
+
+	def get(self, request, pk):
+		supplier = get_object_or_404(Supplier, pk=pk, owner=request.user)
+		data = request.session.get('comparison_results') or {}
+		if not data or data.get('supplier_id') != supplier.id:
+			messages.info(request, 'No comparison data available for this supplier. Please upload a file.')
+			return redirect('supplier_upload', pk=supplier.id)
+
+		context = {
+			'supplier': supplier,
+			'removed_or_out_of_stock': data.get('removed_or_out_of_stock', []),
+			'new_products': data.get('new_products', []),
+			'stock_changes': data.get('stock_changes', []),
+			'price_changes': data.get('price_changes', []),
+		}
+		return render(request, self.template_name, context)
