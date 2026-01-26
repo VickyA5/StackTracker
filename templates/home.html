@@ -10,14 +10,20 @@
     <div style="margin-top:12px;">
       {% if suppliers %}
         <h3 style="margin-bottom:8px">Your suppliers</h3>
-        <ul>
+        <div style="display:flex; flex-direction:column; gap: 12px;">
           {% for s in suppliers %}
-            <li style="margin-bottom:10px;">
-              <strong>{{ s.name }}</strong>
-              <div class="muted">Product ID: {{ s.product_id_column }} | Stock: {{ s.stock_column }}{% if s.price_column %} | Price: {{ s.price_column }}{% endif %}</div>
-            </li>
+            <section style="width:100%; background:#111827; border:1px solid #1f2937; border-radius:8px; padding:16px;">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                <strong style="font-size:16px;">{{ s.name }}</strong>
+                <a class="btn" href="{% url 'supplier_upload' s.id %}">Upload Excel</a>
+              </div>
+              <div class="muted" style="margin-top:6px;">Last file: {% if s.last_uploaded_filename %}{{ s.last_uploaded_filename }}{% else %}No file uploaded yet{% endif %}</div>
+              {% if s.current_file %}
+                <div class="muted" style="margin-top:6px; font-size:12px;">Last updated: {{ s.updated_at|date:"Y-m-d H:i" }}</div>
+              {% endif %}
+            </section>
           {% endfor %}
-        </ul>
+        </div>
       {% else %}
         <p>No suppliers yet. Use "Create Supplier" to add one.</p>
       {% endif %}

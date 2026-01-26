@@ -3,7 +3,6 @@
 {% block title %}Add Supplier{% endblock %}
 
 {% block content %}
-<div class="card">
   <h2>Add Supplier</h2>
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
@@ -24,9 +23,10 @@
       {{ form.current_file.label_tag }}
       {{ form.current_file }}
 
-      <button class="btn" type="submit">Create</button>
-      <a class="btn secondary" href="{% url 'supplier_list' %}">Back</a>
+      <div class="actions" style="display:flex; gap:12px; margin-top:12px; width:100%;">
+        <button class="btn" type="submit" style="flex:1; min-width:0; text-align:center;">Create</button>
+        <a class="btn secondary" href="{% url 'home' %}" style="flex:1; min-width:0; text-align:center; display:inline-flex; align-items:center; justify-content:center;">Back</a>
+      </div>
     </div>
   </form>
-</div>
 {% endblock %}

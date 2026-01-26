@@ -6,6 +6,7 @@ from .views import (
     DashboardView,
     SupplierListView,
     SupplierCreateView,
+    SupplierUploadView,
 )
 
 urlpatterns = [
@@ -16,4 +17,5 @@ urlpatterns = [
     path('logout/', LogoutView.as_view(), name='logout'),
     path('suppliers/', SupplierListView.as_view(), name='supplier_list'),
     path('suppliers/create/', SupplierCreateView.as_view(), name='supplier_create'),
+    path('suppliers/<int:pk>/upload/', SupplierUploadView.as_view(), name='supplier_upload'),
 ]

@@ -124,6 +124,10 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'assets']
 
+# Media storage for supplier files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'supplier_files'
+
 # Authentication redirects
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'
@@ -146,13 +150,21 @@ LOGGING = {
         },
     },
     'loggers': {
+        # Keep Django logs at INFO to avoid debug flood
         'django': {
             'handlers': ['console'],
-            'level': 'INFO' if not DEBUG else 'DEBUG',
+            'level': 'INFO',
         },
+        # Silence SQL debug logs
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        # App logs at INFO
         'accounts': {
             'handlers': ['console'],
-            'level': 'INFO' if not DEBUG else 'DEBUG',
+            'level': 'INFO',
             'propagate': False,
         },
     },
