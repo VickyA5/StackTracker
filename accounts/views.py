@@ -4,7 +4,7 @@ from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse_lazy
-from django.views.generic import TemplateView, FormView, ListView, CreateView, View
+from django.views.generic import TemplateView, FormView, ListView, CreateView, View, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 from .models import Supplier
@@ -194,3 +194,24 @@ class ComparisonResultView(LoginRequiredMixin, View):
 			'price_changes': data.get('price_changes', []),
 		}
 		return render(request, self.template_name, context)
+
+
+class SupplierDeleteView(LoginRequiredMixin, DeleteView):
+	model = Supplier
+	template_name = 'suppliers/delete.html'
+	success_url = reverse_lazy('home')
+
+	def get_queryset(self):
+		return Supplier.objects.filter(owner=self.request.user)
+
+	def delete(self, request, *args, **kwargs):
+		obj = self.get_object()
+		name = obj.name
+		try:
+			if obj.current_file:
+				obj.current_file.delete(save=False)
+		except Exception as exc:
+			logger.warning('Failed to delete file for supplier %s: %s', name, exc)
+		logger.info('Supplier deleted: %s by %s', name, request.user.username)
+		messages.success(request, f'Supplier "{name}" deleted successfully.')
+		return super().delete(request, *args, **kwargs)

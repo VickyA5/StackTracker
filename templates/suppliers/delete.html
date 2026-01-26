@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2 style="margin-top:0">Delete Supplier</h2>
+  <p class="subtitle">This will remove the supplier and its stored file.</p>
+  <div class="card" style="padding:16px;">
+    <p>Are you sure you want to delete <strong>{{ object.name }}</strong>?</p>
+    <form method="post" style="display:flex; gap:8px; margin-top:12px;">
+      {% csrf_token %}
+      <button type="submit" class="btn" style="background:#dc2626;">Confirm Delete</button>
+      <a href="{% url 'home' %}" class="btn secondary">Cancel</a>
+    </form>
+  </div>
+{% endblock %}

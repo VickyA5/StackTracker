@@ -13,9 +13,14 @@
         <div style="display:flex; flex-direction:column; gap: 12px;">
           {% for s in suppliers %}
             <section style="width:100%; background:#111827; border:1px solid #1f2937; border-radius:8px; padding:16px;">
-              <div style="display:flex; align-items:center; justify-content:space-between;">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
                 <strong style="font-size:16px;">{{ s.name }}</strong>
-                <a class="btn" href="{% url 'supplier_upload' s.id %}">Upload Excel</a>
+                <div style="display:flex; gap:8px;">
+                  <a class="btn" href="{% url 'supplier_upload' s.id %}">Upload Excel</a>
+                  <a class="btn secondary" href="{% url 'supplier_delete' s.id %}" aria-label="Delete supplier" title="Delete" style="background:#dc2626; min-width:auto; width:auto; padding:8px 10px; display:inline-flex; align-items:center; justify-content:center;">
+                    <span style="font-size:16px; line-height:1;">🗑️</span>
+                  </a>
+                </div>
               </div>
               <div class="muted" style="margin-top:6px;">Last file: {% if s.last_uploaded_filename %}{{ s.last_uploaded_filename }}{% else %}No file uploaded yet{% endif %}</div>
               {% if s.current_file %}
