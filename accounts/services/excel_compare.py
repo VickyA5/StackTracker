@@ -68,6 +68,17 @@ def normalize_columns(
         raise ValueError(f"Missing expected columns in Excel: {missing}")
 
     out = df[cols].copy()
+    # Remove section/separator rows: rows that have only a single non-empty value across relevant columns
+    def _is_nonempty(v: Any) -> bool:
+        if pd.isna(v):
+            return False
+        s = str(v).strip()
+        return s != ''
+    nonempty_counts = out.apply(lambda r: sum(_is_nonempty(r[c]) for c in out.columns), axis=1)
+    removed_sep = int((nonempty_counts <= 1).sum())
+    if removed_sep:
+        logger.info("Filtering %d separator-like rows (single non-empty cell).", removed_sep)
+    out = out[nonempty_counts > 1].copy()
     rename_map = {product_id: 'id', stock_col: 'stock'}
     if price_col:
         rename_map[price_col] = 'price'
