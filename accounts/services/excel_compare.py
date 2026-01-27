@@ -1,5 +1,6 @@
 import logging
 from typing import Optional, Dict, Any
+import re
 import pandas as pd
 
 logger = logging.getLogger(__name__)
@@ -104,7 +105,41 @@ def normalize_columns(
             agg['price'] = 'last'
         out = out.groupby('id', as_index=False).agg(agg)
     if 'price' in out.columns:
+        def _clean_price(val: Any) -> Optional[str]:
+            if pd.isna(val):
+                return None
+            s = str(val).strip()
+            if not s:
+                return None
+            # Extract the first numeric token (avoid concatenating multiple numeric fragments like times)
+            m = re.search(r"\d[\d.,]*\d|\d", s)
+            if not m:
+                return None
+            token = m.group(0)
+            # Decide decimal separator using the rightmost separator within the token
+            has_comma = ',' in token
+            has_dot = '.' in token
+            if has_comma and has_dot:
+                last_comma = token.rfind(',')
+                last_dot = token.rfind('.')
+                if last_comma > last_dot:
+                    # Comma is decimal: drop dots (thousands), use dot as decimal
+                    cleaned = token.replace('.', '').replace(',', '.')
+                else:
+                    # Dot is decimal: drop commas (thousands)
+                    cleaned = token.replace(',', '')
+            elif has_comma and not has_dot:
+                # Only comma present: treat as decimal
+                cleaned = token.replace(',', '.')
+            else:
+                # Only dots or only digits
+                cleaned = token
+            return cleaned
+
+        out['price'] = out['price'].map(_clean_price)
         out['price'] = pd.to_numeric(out['price'], errors='coerce')
+        # Currency normalization: keep two decimal places
+        out['price'] = out['price'].round(2)
 
     # Drop rows with empty id
     out = out[out['id'] != '']
@@ -133,15 +168,15 @@ def compare_stock(old_df: Optional[pd.DataFrame], new_df: pd.DataFrame) -> Dict[
     old_idx = old_df.set_index('id')
     new_idx = new_df.set_index('id')
 
-    # Removed or out of stock: present before but missing now OR stock <= 0
+    # Removed: present before but missing now
     missing_now = old_idx[~old_idx.index.isin(new_idx.index)].copy()
     missing_now['old_stock'] = missing_now['stock']
     missing_now['new_stock'] = pd.NA
 
-    out_of_stock = new_idx[new_idx['stock'] <= 0].copy()
-    out_of_stock = out_of_stock.join(old_idx[['stock']], how='left', rsuffix='_old')
-    out_of_stock = out_of_stock.rename(columns={'stock_old': 'old_stock', 'stock': 'new_stock'})
-    out_of_stock = out_of_stock.reset_index()[['id', 'old_stock', 'new_stock']]
+    # Became out of stock: new_stock <= 0 and previously had stock > 0
+    joined = new_idx[['stock']].join(old_idx[['stock']], how='left', rsuffix='_old')
+    joined = joined.rename(columns={'stock': 'new_stock', 'stock_old': 'old_stock'})
+    out_of_stock = joined[(joined['new_stock'] <= 0) & (joined['old_stock'] > 0)].reset_index()[['id', 'old_stock', 'new_stock']]
 
     removed_or_out = pd.concat([
         missing_now.reset_index()[['id', 'old_stock', 'new_stock']],
@@ -165,6 +200,8 @@ def compare_stock(old_df: Optional[pd.DataFrame], new_df: pd.DataFrame) -> Dict[
             'old_price': old_idx.loc[common_ids, 'price'],
             'new_price': new_idx.loc[common_ids, 'price'],
         }, index=common_ids).reset_index()
+        # Only consider rows where both old and new prices are numeric (not NaN)
+        price_compare = price_compare.dropna(subset=['old_price', 'new_price'])
         price_changes = price_compare[price_compare['old_price'] != price_compare['new_price']]
     else:
         price_changes = pd.DataFrame(columns=['id', 'old_price', 'new_price'])
