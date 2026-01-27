@@ -5,9 +5,10 @@ from .models import Supplier
 class SupplierForm(forms.ModelForm):
     class Meta:
         model = Supplier
-        fields = ['name', 'product_id_column', 'stock_column', 'price_column', 'stock_in_text', 'stock_out_text', 'current_file']
+        fields = ['name', 'product_name_column', 'product_id_column', 'stock_column', 'price_column', 'stock_in_text', 'stock_out_text', 'current_file']
         widgets = {
             'name': forms.TextInput(attrs={'placeholder': 'Supplier name'}),
+            'product_name_column': forms.TextInput(attrs={'placeholder': 'e.g. product_name (optional)'}),
             'product_id_column': forms.TextInput(attrs={'placeholder': 'e.g. sku or product_id'}),
             'stock_column': forms.TextInput(attrs={'placeholder': 'e.g. stock_qty'}),
             'price_column': forms.TextInput(attrs={'placeholder': 'e.g. price (optional)'}),

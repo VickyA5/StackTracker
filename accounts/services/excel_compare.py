@@ -50,6 +50,7 @@ def normalize_columns(
     product_id: str,
     stock_col: str,
     price_col: Optional[str],
+    name_col: Optional[str] = None,
     stock_in_text: Optional[str] = None,
     stock_out_text: Optional[str] = None,
 ) -> pd.DataFrame:
@@ -60,6 +61,8 @@ def normalize_columns(
     cols = [product_id, stock_col]
     if price_col:
         cols.append(price_col)
+    if name_col:
+        cols.append(name_col)
     missing = [c for c in cols if c not in df.columns]
     if missing:
         raise ValueError(f"Missing expected columns in Excel: {missing}")
@@ -68,10 +71,17 @@ def normalize_columns(
     rename_map = {product_id: 'id', stock_col: 'stock'}
     if price_col:
         rename_map[price_col] = 'price'
+    if name_col:
+        rename_map[name_col] = 'name'
     out = out.rename(columns=rename_map)
 
     # Normalize types
     out['id'] = out['id'].astype(str).str.strip()
+    if 'name' in out.columns:
+        # Preserve original strings; strip only if it's a str, keep NaN as NaN
+        out['name'] = out['name'].apply(lambda v: v.strip() if isinstance(v, str) else v)
+        # Treat empty strings as missing
+        out['name'] = out['name'].replace('', pd.NA)
     # Handle stock values: numeric preferred; if text, map using configured strings
     stock_series = out['stock']
     numeric_stock = pd.to_numeric(stock_series, errors='coerce')
@@ -103,6 +113,8 @@ def normalize_columns(
         agg = {'stock': 'sum'}
         if 'price' in out.columns:
             agg['price'] = 'last'
+        if 'name' in out.columns:
+            agg['name'] = lambda s: s.dropna().iloc[-1] if s.dropna().shape[0] else pd.NA
         out = out.groupby('id', as_index=False).agg(agg)
     if 'price' in out.columns:
         def _clean_price(val: Any) -> Optional[str]:
@@ -172,15 +184,32 @@ def compare_stock(old_df: Optional[pd.DataFrame], new_df: pd.DataFrame) -> Dict[
     missing_now = old_idx[~old_idx.index.isin(new_idx.index)].copy()
     missing_now['old_stock'] = missing_now['stock']
     missing_now['new_stock'] = pd.NA
+    if 'name' in old_idx.columns:
+        missing_now = missing_now.rename(columns={'name': 'name'})
 
     # Became out of stock: new_stock <= 0 and previously had stock > 0
-    joined = new_idx[['stock']].join(old_idx[['stock']], how='left', rsuffix='_old')
+    cols_to_join = ['stock']
+    if 'name' in new_idx.columns:
+        cols_to_join.append('name')
+    joined = new_idx[cols_to_join].join(old_idx[['stock']], how='left', rsuffix='_old')
     joined = joined.rename(columns={'stock': 'new_stock', 'stock_old': 'old_stock'})
-    out_of_stock = joined[(joined['new_stock'] <= 0) & (joined['old_stock'] > 0)].reset_index()[['id', 'old_stock', 'new_stock']]
+    out_of_stock = joined[(joined['new_stock'] <= 0) & (joined['old_stock'] > 0)].reset_index()
+    keep_cols = ['id', 'old_stock', 'new_stock'] + (['name'] if 'name' in joined.columns else [])
+    out_of_stock = out_of_stock[keep_cols]
 
+    # Build a consistent set of columns for concatenation
+    base_cols = ['id', 'old_stock', 'new_stock']
+    if 'name' in missing_now.columns or ('name' in out_of_stock.columns):
+        base_cols.append('name')
+    left = missing_now.reset_index()
+    if 'name' not in left.columns and 'name' in base_cols:
+        left['name'] = pd.NA
+    right = out_of_stock.copy()
+    if 'name' not in right.columns and 'name' in base_cols:
+        right['name'] = pd.NA
     removed_or_out = pd.concat([
-        missing_now.reset_index()[['id', 'old_stock', 'new_stock']],
-        out_of_stock
+        left[base_cols],
+        right[base_cols]
     ], ignore_index=True)
 
     # New products: in new but not in old
@@ -191,7 +220,10 @@ def compare_stock(old_df: Optional[pd.DataFrame], new_df: pd.DataFrame) -> Dict[
     stock_compare = pd.DataFrame({
         'old_stock': old_idx.loc[common_ids, 'stock'],
         'new_stock': new_idx.loc[common_ids, 'stock'],
-    }, index=common_ids).reset_index()
+    }, index=common_ids)
+    if 'name' in new_idx.columns:
+        stock_compare = stock_compare.join(new_idx[['name']], how='left')
+    stock_compare = stock_compare.reset_index()
     stock_changes = stock_compare[stock_compare['old_stock'] != stock_compare['new_stock']]
 
     # Price changes: if both have price
@@ -199,7 +231,10 @@ def compare_stock(old_df: Optional[pd.DataFrame], new_df: pd.DataFrame) -> Dict[
         price_compare = pd.DataFrame({
             'old_price': old_idx.loc[common_ids, 'price'],
             'new_price': new_idx.loc[common_ids, 'price'],
-        }, index=common_ids).reset_index()
+        }, index=common_ids)
+        if 'name' in new_idx.columns:
+            price_compare = price_compare.join(new_idx[['name']], how='left')
+        price_compare = price_compare.reset_index()
         # Only consider rows where both old and new prices are numeric (not NaN)
         price_compare = price_compare.dropna(subset=['old_price', 'new_price'])
         price_changes = price_compare[price_compare['old_price'] != price_compare['new_price']]

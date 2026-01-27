@@ -16,6 +16,7 @@ class Supplier(models.Model):
 		settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='suppliers'
 	)
 	name = models.CharField(max_length=200)
+	product_name_column = models.CharField(max_length=100, blank=True, null=True, help_text='Optional column name that contains the product name/description')
 	product_id_column = models.CharField(max_length=100, help_text='Column name that contains the product identifier')
 	stock_column = models.CharField(max_length=100, help_text='Column name that contains stock quantities')
 	price_column = models.CharField(max_length=100, blank=True, null=True, help_text='Column name that contains price (optional)')

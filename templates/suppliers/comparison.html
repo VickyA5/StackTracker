@@ -1,6 +1,13 @@
 {% extends 'base.html' %}
 {% load display %}
 {% block content %}
+<style>
+  /* Widen this screen's container and card for better readability */
+  .container { max-width: 1100px; }
+  .card { max-width: 100%; }
+  table th, table td { padding: 8px; }
+  table { width: 100%; border-collapse: collapse; }
+</style>
 <div>
   <h2 style="margin-top:0">Comparison for {{ supplier.name }}</h2>
   <p class="subtitle">Scroll through each section to review changes.</p>
@@ -26,6 +33,7 @@
             <thead>
               <tr>
                 <th style="text-align:left; padding:8px;">ID</th>
+                <th style="text-align:left; padding:8px;">Name</th>
                 <th style="text-align:left; padding:8px;">Old Stock</th>
                 <th style="text-align:left; padding:8px;">New Stock</th>
               </tr>
@@ -34,6 +42,7 @@
               {% for row in removed_or_out_of_stock %}
                 <tr>
                   <td style="padding:8px;">{{ row.id|safeval }}</td>
+                  <td style="padding:8px;">{{ row.name|safeval }}</td>
                   <td style="padding:8px;">{{ row.old_stock|safeval }}</td>
                   <td style="padding:8px;">{{ row.new_stock|safeval }}</td>
                 </tr>
@@ -55,6 +64,7 @@
             <thead>
               <tr>
                 <th style="text-align:left; padding:8px;">ID</th>
+                <th style="text-align:left; padding:8px;">Name</th>
                 <th style="text-align:left; padding:8px;">Stock</th>
                 <th style="text-align:left; padding:8px;">Price</th>
               </tr>
@@ -63,6 +73,7 @@
               {% for row in new_products %}
                 <tr>
                   <td style="padding:8px;">{{ row.id|safeval }}</td>
+                  <td style="padding:8px;">{{ row.name|safeval }}</td>
                   <td style="padding:8px;">{{ row.stock|safeval }}</td>
                   <td style="padding:8px;">{{ row.price|safeval }}</td>
                 </tr>
@@ -84,6 +95,7 @@
             <thead>
               <tr>
                 <th style="text-align:left; padding:8px;">ID</th>
+                <th style="text-align:left; padding:8px;">Name</th>
                 <th style="text-align:left; padding:8px;">Old Stock</th>
                 <th style="text-align:left; padding:8px;">New Stock</th>
               </tr>
@@ -92,6 +104,7 @@
               {% for row in stock_changes %}
                 <tr>
                   <td style="padding:8px;">{{ row.id|safeval }}</td>
+                  <td style="padding:8px;">{{ row.name|safeval }}</td>
                   <td style="padding:8px;">{{ row.old_stock|safeval }}</td>
                   <td style="padding:8px;">{{ row.new_stock|safeval }}</td>
                 </tr>
@@ -113,6 +126,7 @@
             <thead>
               <tr>
                 <th style="text-align:left; padding:8px;">ID</th>
+                <th style="text-align:left; padding:8px;">Name</th>
                 <th style="text-align:left; padding:8px;">Old Price</th>
                 <th style="text-align:left; padding:8px;">New Price</th>
               </tr>
@@ -121,6 +135,7 @@
               {% for row in price_changes %}
                 <tr>
                   <td style="padding:8px;">{{ row.id|safeval }}</td>
+                  <td style="padding:8px;">{{ row.name|safeval }}</td>
                   <td style="padding:8px;">{{ row.old_price|safeval }}</td>
                   <td style="padding:8px;">{{ row.new_price|safeval }}</td>
                 </tr>

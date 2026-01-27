@@ -114,6 +114,7 @@ class SupplierUploadView(LoginRequiredMixin, View):
 					product_id=supplier.product_id_column,
 					stock_col=supplier.stock_column,
 					price_col=supplier.price_column,
+					name_col=supplier.product_name_column,
 					stock_in_text=supplier.stock_in_text,
 					stock_out_text=supplier.stock_out_text,
 				)
@@ -129,6 +130,7 @@ class SupplierUploadView(LoginRequiredMixin, View):
 				product_id=supplier.product_id_column,
 				stock_col=supplier.stock_column,
 				price_col=supplier.price_column,
+				name_col=supplier.product_name_column,
 				stock_in_text=supplier.stock_in_text,
 				stock_out_text=supplier.stock_out_text,
 			)
