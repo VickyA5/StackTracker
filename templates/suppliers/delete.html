@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 {% block content %}
-  <h2 style="margin-top:0">Delete Supplier</h2>
-  <p class="subtitle">This will remove the supplier and its stored file.</p>
-  <div class="card" style="padding:16px;">
+  <h2 class="centered" style="margin-top:0">Delete Supplier</h2>
+  <p class="subtitle centered">This will remove the supplier and its stored file.</p>
+  <div class="card centered" style="padding:16px;">
     <p>Are you sure you want to delete <strong>{{ object.name }}</strong>?</p>
-    <form method="post" style="display:flex; gap:8px; margin-top:12px;">
+    <form method="post" style="display:flex; flex-direction:row; gap:8px; margin-top:12px; justify-content:center; align-items:center;">
       {% csrf_token %}
       <button type="submit" class="btn" style="background:#dc2626;">Confirm Delete</button>
       <a href="{% url 'home' %}" class="btn secondary">Cancel</a>

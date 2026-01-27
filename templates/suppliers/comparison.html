@@ -4,6 +4,18 @@
 <div>
   <h2 style="margin-top:0">Comparison for {{ supplier.name }}</h2>
   <p class="subtitle">Scroll through each section to review changes.</p>
+  <div class="card" style="padding:12px; margin-bottom:12px;">
+    <div style="display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;">
+      <div>
+        <strong>Old file:</strong>
+        <span class="muted">{% if old_file_name %}{{ old_file_name }}{% else %}None (first upload){% endif %}</span>
+      </div>
+      <div>
+        <strong>New file:</strong>
+        <span class="muted">{% if new_file_name %}{{ new_file_name }}{% else %}Unknown{% endif %}</span>
+      </div>
+    </div>
+  </div>
   <div style="display:grid; grid-template-columns: 1fr; gap: 16px;">
     <!-- Removed / Out of Stock -->
     <section class="card" style="padding:16px;">

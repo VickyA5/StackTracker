@@ -64,11 +64,20 @@ class SupplierCreateView(LoginRequiredMixin, CreateView):
 	model = Supplier
 	form_class = SupplierForm
 	template_name = 'suppliers/create.html'
-	success_url = reverse_lazy('supplier_list')
+	success_url = reverse_lazy('home')
 
 	def form_valid(self, form):
 		form.instance.owner = self.request.user
 		response = super().form_valid(form)
+		# If an initial file was provided during creation, store its original name
+		try:
+			uploaded = form.cleaned_data.get('current_file')
+			if uploaded:
+				self.object.last_uploaded_filename = getattr(uploaded, 'name', None) or 'stock.xlsx'
+				self.object.save(update_fields=['last_uploaded_filename', 'updated_at'])
+				logger.info('Initial file set for supplier %s: %s', self.object.name, self.object.last_uploaded_filename)
+		except Exception as exc:
+			logger.warning('Failed to record initial file name for %s: %s', self.object.name, exc)
 		messages.success(self.request, 'Supplier created successfully.')
 		logger.info('Supplier created: %s by %s', form.instance.name, self.request.user.username)
 		return response
@@ -90,6 +99,10 @@ class SupplierUploadView(LoginRequiredMixin, View):
 			return render(request, self.template_name, {'form': form, 'supplier': supplier})
 
 		upload_file = form.cleaned_data['file']
+
+		# Capture file names for UI
+		old_original_name = supplier.last_uploaded_filename
+		new_original_name = getattr(upload_file, 'name', 'stock.xlsx')
 
 		# Load previous file (if exists) into memory for comparison
 		old_df = None
@@ -133,7 +146,7 @@ class SupplierUploadView(LoginRequiredMixin, View):
 				supplier.current_file.delete(save=False)
 			fixed_name = f"user_{request.user.id}/supplier_{supplier.id}/stock.xlsx"
 			supplier.current_file.save(fixed_name, upload_file, save=False)
-			supplier.last_uploaded_filename = getattr(upload_file, 'name', 'stock.xlsx')
+			supplier.last_uploaded_filename = new_original_name
 			supplier.save(update_fields=['current_file', 'last_uploaded_filename', 'updated_at'])
 			logger.info('Saved new file for supplier %s (original: %s)', supplier.name, supplier.last_uploaded_filename)
 		except Exception as exc:
@@ -167,6 +180,8 @@ class SupplierUploadView(LoginRequiredMixin, View):
 		request.session['comparison_results'] = {
 			'supplier_id': supplier.id,
 			'supplier_name': supplier.name,
+			'old_file_name': old_original_name,
+			'new_file_name': new_original_name,
 			'removed_or_out_of_stock': df_records(comparison['removed_or_out_of_stock']),
 			'new_products': df_records(comparison['new_products']),
 			'stock_changes': df_records(comparison['stock_changes']),
@@ -188,6 +203,8 @@ class ComparisonResultView(LoginRequiredMixin, View):
 
 		context = {
 			'supplier': supplier,
+			'old_file_name': data.get('old_file_name'),
+			'new_file_name': data.get('new_file_name'),
 			'removed_or_out_of_stock': data.get('removed_or_out_of_stock', []),
 			'new_products': data.get('new_products', []),
 			'stock_changes': data.get('stock_changes', []),

@@ -147,6 +147,7 @@ LOGGING = {
         'console': {
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
+            'level': 'INFO',
         },
     },
     'loggers': {
@@ -167,6 +168,11 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
         },
+    },
+    # Ensure any unspecified logger (including module-level loggers) emits at INFO
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
     },
 }
 
