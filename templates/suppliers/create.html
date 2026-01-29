@@ -4,6 +4,8 @@
 
 {% block content %}
   <h2>Add Supplier</h2>
+  <p class="subtitle">Enter column names exactly as they appear in your stock Excel, and upload an initial Excel to use as the baseline for future comparisons.</p>
+  <p class="subtitle" style="margin:6px 0 16px;">Minimum required: <em>Product ID</em>. Optional: <em>Stock</em>, <em>Price</em>, and <em>Name/Description</em>. If stock uses text (e.g., "IN STOCK" / "OUT OF STOCK"), choose <em>Text (strings)</em> and provide the strings.</p>
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.non_field_errors }}
@@ -32,7 +34,7 @@
             <span>Text (strings)</span>
           </label>
         </div>
-        <p class="muted" style="margin-top:6px;">Choose whether the stock column has numbers or text like "EN STOCK" / "AGOTADO".</p>
+        <p class="muted" style="margin-top:6px;">Choose whether the stock column has numbers or text like "IN STOCK" / "OUT OF STOCK".</p>
       </div>
 
       <div id="text-stock-config" style="display:none; margin-top:8px;">
