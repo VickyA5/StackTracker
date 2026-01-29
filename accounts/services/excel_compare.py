@@ -95,6 +95,8 @@ def normalize_columns(
         out['name'] = out['name'].replace('', pd.NA)
     # Handle stock values: numeric preferred; if text, map using configured strings
     stock_series = out['stock']
+    # Preserve raw stock for display in text-based suppliers
+    out['stock_raw'] = stock_series.apply(lambda v: v.strip() if isinstance(v, str) else v)
     numeric_stock = pd.to_numeric(stock_series, errors='coerce')
     out['stock'] = numeric_stock
 
@@ -126,6 +128,8 @@ def normalize_columns(
             agg['price'] = 'last'
         if 'name' in out.columns:
             agg['name'] = lambda s: s.dropna().iloc[-1] if s.dropna().shape[0] else pd.NA
+        if 'stock_raw' in out.columns:
+            agg['stock_raw'] = lambda s: s.dropna().iloc[-1] if s.dropna().shape[0] else pd.NA
         out = out.groupby('id', as_index=False).agg(agg)
     if 'price' in out.columns:
         def _clean_price(val: Any) -> Optional[str]:
@@ -232,6 +236,10 @@ def compare_stock(old_df: Optional[pd.DataFrame], new_df: pd.DataFrame) -> Dict[
         'old_stock': old_idx.loc[common_ids, 'stock'],
         'new_stock': new_idx.loc[common_ids, 'stock'],
     }, index=common_ids)
+    if 'stock_raw' in old_idx.columns:
+        stock_compare['old_stock_raw'] = old_idx.loc[common_ids, 'stock_raw']
+    if 'stock_raw' in new_idx.columns:
+        stock_compare['new_stock_raw'] = new_idx.loc[common_ids, 'stock_raw']
     if 'name' in new_idx.columns:
         stock_compare = stock_compare.join(new_idx[['name']], how='left')
     stock_compare = stock_compare.reset_index()

@@ -2,24 +2,29 @@
 {% load display %}
 {% block content %}
 <style>
-  /* Widen this screen's container and card for better readability */
   .container { max-width: 1100px; }
   .card { max-width: 100%; }
   table th, table td { padding: 8px; }
   table { width: 100%; border-collapse: collapse; }
+  table thead th { font-weight: 700; }
+  /* Use a palette-friendly dark slate distinct from page/card */
+  table tbody td { background: #0b1220; }
+  .old-val { color: #9ca3af; }
+  .new-val { color: #10b981; }
+  .page-title { text-align: center; }
 </style>
 <div>
-  <h2 style="margin-top:0">Comparison for {{ supplier.name }}</h2>
+  <h2 class="page-title" style="margin-top:0">Comparison for {{ supplier.name }}</h2>
   <p class="subtitle">Scroll through each section to review changes.</p>
   <div class="card" style="padding:12px; margin-bottom:12px;">
     <div style="display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;">
       <div>
-        <strong>Old file:</strong>
-        <span class="muted">{% if old_file_name %}{{ old_file_name }}{% else %}None (first upload){% endif %}</span>
+        <strong>📄Old file:</strong>
+        <span class="muted old-val">{% if old_file_name %}{{ old_file_name }}{% else %}None (first upload){% endif %}</span>
       </div>
       <div>
-        <strong>New file:</strong>
-        <span class="muted">{% if new_file_name %}{{ new_file_name }}{% else %}Unknown{% endif %}</span>
+        <strong>📄New file:</strong>
+        <span class="muted new-val">{% if new_file_name %}{{ new_file_name }}{% else %}Unknown{% endif %}</span>
       </div>
     </div>
   </div>
@@ -43,8 +48,8 @@
                 <tr>
                   <td style="padding:8px;">{{ row.id|safeval }}</td>
                   <td style="padding:8px;">{{ row.name|safeval }}</td>
-                  <td style="padding:8px;">{{ row.old_stock|safeval }}</td>
-                  <td style="padding:8px;">{{ row.new_stock|safeval }}</td>
+                  <td class="old-val" style="padding:8px;">{{ row.old_stock|safeval }}</td>
+                  <td class="new-val" style="padding:8px;">{{ row.new_stock|safeval }}</td>
                 </tr>
               {% endfor %}
             </tbody>
@@ -96,8 +101,13 @@
               <tr>
                 <th style="text-align:left; padding:8px;">ID</th>
                 <th style="text-align:left; padding:8px;">Name</th>
-                <th style="text-align:left; padding:8px;">Old Stock</th>
-                <th style="text-align:left; padding:8px;">New Stock</th>
+                {% if supplier.stock_in_text or supplier.stock_out_text %}
+                  <th style="text-align:left; padding:8px;">Old Stock (text)</th>
+                  <th style="text-align:left; padding:8px;">New Stock (text)</th>
+                {% else %}
+                  <th style="text-align:left; padding:8px;">Old Stock</th>
+                  <th style="text-align:left; padding:8px;">New Stock</th>
+                {% endif %}
               </tr>
             </thead>
             <tbody>
@@ -105,8 +115,13 @@
                 <tr>
                   <td style="padding:8px;">{{ row.id|safeval }}</td>
                   <td style="padding:8px;">{{ row.name|safeval }}</td>
-                  <td style="padding:8px;">{{ row.old_stock|safeval }}</td>
-                  <td style="padding:8px;">{{ row.new_stock|safeval }}</td>
+                  {% if supplier.stock_in_text or supplier.stock_out_text %}
+                    <td class="old-val" style="padding:8px;">{{ row.old_stock_raw|safeval }}</td>
+                    <td class="new-val" style="padding:8px;">{{ row.new_stock_raw|safeval }}</td>
+                  {% else %}
+                    <td class="old-val" style="padding:8px;">{{ row.old_stock|safeval }}</td>
+                    <td class="new-val" style="padding:8px;">{{ row.new_stock|safeval }}</td>
+                  {% endif %}
                 </tr>
               {% endfor %}
             </tbody>
@@ -136,8 +151,8 @@
                 <tr>
                   <td style="padding:8px;">{{ row.id|safeval }}</td>
                   <td style="padding:8px;">{{ row.name|safeval }}</td>
-                  <td style="padding:8px;">{{ row.old_price|safeval }}</td>
-                  <td style="padding:8px;">{{ row.new_price|safeval }}</td>
+                  <td class="old-val" style="padding:8px;">{{ row.old_price|safeval }}</td>
+                  <td class="new-val" style="padding:8px;">{{ row.new_price|safeval }}</td>
                 </tr>
               {% endfor %}
             </tbody>

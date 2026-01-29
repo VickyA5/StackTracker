@@ -22,9 +22,9 @@
                   </a>
                 </div>
               </div>
-              <div class="muted" style="margin-top:6px;">Last file: {% if s.last_uploaded_filename %}{{ s.last_uploaded_filename }}{% else %}No file uploaded yet{% endif %}</div>
+              <div class="muted" style="margin-top:6px; text-align:left;">Last file: {% if s.last_uploaded_filename %}{{ s.last_uploaded_filename }}{% else %}No file uploaded yet{% endif %}</div>
               {% if s.current_file %}
-                <div class="muted" style="margin-top:6px; font-size:12px;">Last updated: {{ s.updated_at|date:"Y-m-d H:i" }}</div>
+                <div class="muted" style="margin-top:6px; font-size:12px; text-align:left;">Last updated: {{ s.updated_at|date:"Y-m-d H:i" }}</div>
               {% endif %}
             </section>
           {% endfor %}
