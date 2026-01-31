@@ -48,8 +48,8 @@
                 <tr>
                   <td style="padding:8px;">{{ row.id|safeval }}</td>
                   <td style="padding:8px;">{{ row.name|safeval }}</td>
-                  <td class="old-val" style="padding:8px;">{{ row.old_stock|safeval }}</td>
-                  <td class="new-val" style="padding:8px;">{{ row.new_stock|safeval }}</td>
+                  <td class="old-val" style="padding:8px;">{{ row.old_stock|safeint }}</td>
+                  <td class="new-val" style="padding:8px;">{{ row.new_stock|safeint }}</td>
                 </tr>
               {% endfor %}
             </tbody>

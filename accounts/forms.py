@@ -19,6 +19,15 @@ class SupplierForm(forms.ModelForm):
     def clean_name(self):
         return self.cleaned_data['name'].strip()
 
+    def clean_current_file(self):
+        f = self.cleaned_data.get('current_file')
+        if not f:
+            return f
+        name = (getattr(f, 'name', '') or '').lower()
+        if not (name.endswith('.xlsx') or name.endswith('.xls')):
+            raise forms.ValidationError('Please upload an Excel file (.xlsx or .xls).')
+        return f
+
 
 class SupplierUploadForm(forms.Form):
     file = forms.FileField(allow_empty_file=False)

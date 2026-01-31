@@ -50,6 +50,9 @@
 
       {{ form.current_file.label_tag }}
       {{ form.current_file }}
+      {% if form.current_file.errors %}
+        <div class="field-errors">{{ form.current_file.errors|striptags }}</div>
+      {% endif %}
 
       <div class="actions" style="display:flex; gap:12px; margin-top:12px; width:100%;">
         <button class="btn" type="submit" style="flex:1; min-width:0; text-align:center;">Create</button>

@@ -22,3 +22,22 @@ def safeval(value):
         return value
     except Exception:
         return '-'
+
+@register.filter(name='safeint')
+def safeint(value):
+    """
+    Template filter: render stock values as integers.
+    Returns '-' for NaN/None/empty/non-numeric values.
+    """
+    try:
+        if value is None:
+            return '-'
+        if isinstance(value, float) and math.isnan(value):
+            return '-'
+        sval = str(value).strip()
+        if sval.lower() in ('nan', 'none', '') or sval.lower() == '<na>':
+            return '-'
+        num = float(sval)
+        return int(round(num))
+    except Exception:
+        return '-'
