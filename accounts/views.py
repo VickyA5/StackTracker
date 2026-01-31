@@ -8,7 +8,7 @@ from django.views.generic import TemplateView, FormView, ListView, CreateView, V
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 from .models import Supplier
-from .forms import SupplierForm, SupplierUploadForm
+from .forms import SupplierForm, SupplierUploadForm, SupplierConfigForm
 from .services.excel_compare import read_excel_dynamic, normalize_columns, compare_stock
 
 logger = logging.getLogger(__name__)
@@ -234,3 +234,32 @@ class SupplierDeleteView(LoginRequiredMixin, DeleteView):
 		logger.info('Supplier deleted: %s by %s', name, request.user.username)
 		messages.success(request, f'Supplier "{name}" deleted successfully.')
 		return super().delete(request, *args, **kwargs)
+
+
+class SupplierSettingsView(LoginRequiredMixin, CreateView):
+	model = Supplier
+	form_class = SupplierConfigForm
+	template_name = 'suppliers/settings.html'
+	success_url = reverse_lazy('home')
+
+	def dispatch(self, request, *args, **kwargs):
+		return super().dispatch(request, *args, **kwargs)
+
+	def get_object(self, queryset=None):
+		return get_object_or_404(Supplier, pk=self.kwargs['pk'], owner=self.request.user)
+
+	def get(self, request, *args, **kwargs):
+		supplier = self.get_object()
+		form = self.form_class(instance=supplier)
+		return render(request, self.template_name, {'form': form, 'supplier': supplier})
+
+	def post(self, request, *args, **kwargs):
+		supplier = self.get_object()
+		form = self.form_class(request.POST, instance=supplier)
+		if form.is_valid():
+			form.save()
+			messages.success(request, 'Supplier columns updated successfully.')
+			logger.info('Supplier columns updated for %s by %s', supplier.name, request.user.username)
+			return redirect(self.success_url)
+		messages.error(request, 'Please fix the form errors and try again.')
+		return render(request, self.template_name, {'form': form, 'supplier': supplier})

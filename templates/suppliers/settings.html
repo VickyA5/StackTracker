@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Supplier Settings{% endblock %}
+
+{% block content %}
+  <h2>Supplier Settings</h2>
+  <p class="subtitle">Edit the column mapping for <strong>{{ supplier.name }}</strong>. Enter names exactly as in the supplier's Excel.</p>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <div class="vstack">
+      {{ form.product_id_column.label_tag }}
+      {{ form.product_id_column }}
+
+      {{ form.product_name_column.label_tag }}
+      {{ form.product_name_column }}
+
+      {{ form.stock_column.label_tag }}
+      {{ form.stock_column }}
+
+      {{ form.price_column.label_tag }}
+      {{ form.price_column }}
+
+      <div style="margin-top:8px;">
+        <label style="display:block; margin-bottom:6px;">Stock value type</label>
+        <div class="muted" style="font-size:14px;">Use text options below if the supplier reports stock as strings.</div>
+      </div>
+
+      {{ form.stock_in_text.label_tag }}
+      {{ form.stock_in_text }}
+
+      {{ form.stock_out_text.label_tag }}
+      {{ form.stock_out_text }}
+
+      <div class="actions" style="display:flex; gap:12px; margin-top:12px; width:100%;">
+        <button class="btn" type="submit" style="flex:1; min-width:0; text-align:center;">Save changes</button>
+        <a class="btn secondary" href="{% url 'home' %}" style="flex:1; min-width:0; text-align:center; display:inline-flex; align-items:center; justify-content:center;">Back</a>
+      </div>
+    </div>
+  </form>
+{% endblock %}
