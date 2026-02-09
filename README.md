@@ -2,6 +2,14 @@
 
 ![StackTracker](assets/stacktracker.png)
 
+## Table of Contents
+- [Overview](#overview)
+- [Technologies Used](#technologies-used)
+- [Requirements](#requirements)
+- [Local Use (Docker)](#local-use-docker)
+- [Demo](#demo)
+
+## Overview
 StackTracker is a web application designed to help small businesses monitor daily stock and price changes from multiple suppliers.
 
 The system allows users to configure supplier-specific Excel schemas, upload daily stock files, and automatically detect product additions, removals, and price updates.
@@ -28,6 +36,16 @@ docker compose up --build
 # App will be available at
 # http://localhost:8000/
 ```
+
+## Demo
+Below are several screenshots showcasing key parts of the application:
+
+![Screen 1 - Home](assets/screen1.png)
+![Screen 2 - Login](assets/screen2.png)
+![Screen 3 - Dashboard](assets/screen3.png)
+![Screen 4 - Suppliers List](assets/screen4.png)
+![Screen 5 - Upload](assets/screen5.png)
+![Screen 6 - Comparison](assets/screen6.png)
 
 
 
