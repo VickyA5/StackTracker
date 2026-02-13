@@ -33,4 +33,4 @@ ENV DJANGO_DEBUG=True \
     DB_PORT=5432
 
 ENTRYPOINT ["/app/entrypoint.sh"]
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["sh", "-c", "gunicorn stacktracker.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 3"]
