@@ -149,6 +149,19 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'supplier_files'
 
+# Supabase storage configuration (used for supplier files)
+# These can be set via environment variables or overridden in Django settings.
+SUPABASE_PROJECT_ID = os.environ.get('SUPABASE_PROJECT_ID')
+SUPABASE_URL = os.environ.get('SUPABASE_URL') or (
+    F"https://{SUPABASE_PROJECT_ID}.supabase.co" if SUPABASE_PROJECT_ID else None
+)
+SUPABASE_ANON_KEY = os.environ.get('SUPABASE_ANON_KEY')
+SUPABASE_SERVICE_ROLE_KEY = os.environ.get('SUPABASE_SERVICE_ROLE_KEY')
+SUPABASE_BUCKET = os.environ.get('SUPABASE_BUCKET', 'provider-files')
+
+# Use Supabase as the default storage backend for uploaded media files
+DEFAULT_FILE_STORAGE = 'accounts.storage_backends.SupabaseDjangoStorage'
+
 # Authentication redirects
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'

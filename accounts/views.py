@@ -10,6 +10,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Supplier
 from .forms import SupplierForm, SupplierUploadForm, SupplierConfigForm
 from .services.excel_compare import read_excel_dynamic, normalize_columns, compare_stock
+from .services.supabase_storage import SupabaseStorageError
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +69,19 @@ class SupplierCreateView(LoginRequiredMixin, CreateView):
 
 	def form_valid(self, form):
 		form.instance.owner = self.request.user
-		response = super().form_valid(form)
+		try:
+			response = super().form_valid(form)
+		except SupabaseStorageError as exc:
+			# Si hay problemas al guardar el archivo en Supabase, registramos el error,
+			# creamos el proveedor sin archivo y mostramos un mensaje amigable.
+			logger.exception('Error saving initial file to Supabase for supplier %s: %s', form.instance.name, exc)
+			form.instance.current_file = None
+			if not form.instance.pk:
+				form.instance.save()
+			messages.error(self.request, 'El proveedor se creó, pero hubo un problema al subir el archivo inicial. Inténtalo de nuevo más tarde.')
+			logger.info('Supplier created without initial file due to storage error: %s by %s', form.instance.name, self.request.user.username)
+			return redirect(self.success_url)
+
 		# If an initial file was provided during creation, store its original name
 		try:
 			uploaded = form.cleaned_data.get('current_file')
@@ -108,7 +121,8 @@ class SupplierUploadView(LoginRequiredMixin, View):
 		old_df = None
 		if supplier.current_file and supplier.current_file.name:
 			try:
-				old_df_raw = read_excel_dynamic(supplier.current_file.path, supplier.product_id_column)
+				with supplier.current_file.open('rb') as previous_file:
+					old_df_raw = read_excel_dynamic(previous_file, supplier.product_id_column)
 				old_df = normalize_columns(
 					old_df_raw,
 					product_id=supplier.product_id_column,
