@@ -16,9 +16,70 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Supplier
 from .forms import SupplierForm, SupplierUploadForm, SupplierConfigForm
 from .services.excel_compare import read_excel_dynamic, normalize_columns, compare_stock
-from .services.supabase_storage import SupabaseStorageError
+from .services.supabase_storage import SupabaseStorageError, get_supabase_storage_service
 
 logger = logging.getLogger(__name__)
+
+
+def _clean_comparison_value(value):
+	"""Normalize values for JSON/session storage and template rendering.
+
+	Converts NaN-like values to None and strips simple string wrappers while
+	leaving valid numbers and strings intact.
+	"""
+	try:
+		if value is None:
+			return None
+		# Convert NaN / <NA> textual representations to None
+		s = str(value).strip().lower()
+		if s in ("nan", "<na>"):
+			return None
+		return value
+	except Exception:
+		return None
+
+
+def dataframe_to_records(df: pd.DataFrame):
+	"""Convert a pandas DataFrame to a list of cleaned dict records.
+
+	This mirrors the sanitisation previously done inline in SupplierUploadView.
+	"""
+	if df is None or df.empty:
+		return []
+	try:
+		records = df.to_dict("records")
+		return [
+			{k: _clean_comparison_value(v) for k, v in rec.items()}
+			for rec in records
+		]
+	except Exception:
+		return []
+
+
+def build_comparison_excel_bytes(data: dict) -> bytes:
+	"""Build an in-memory Excel file from comparison result data.
+
+	`data` is expected to be the same structure stored in the session under
+	`comparison_results`, with keys matching section names.
+	"""
+	output = BytesIO()
+	with pd.ExcelWriter(output, engine="openpyxl") as writer:
+		sections = [
+			("removed_or_out_of_stock", "Removed_or_OutOfStock"),
+			("new_products", "New_Products"),
+			("stock_changes", "Stock_Changes"),
+			("price_changes", "Price_Changes"),
+		]
+		for key, sheet_name in sections:
+			rows = data.get(key) or []
+			if rows:
+				df = pd.DataFrame(rows)
+			else:
+				df = pd.DataFrame()
+			df.to_excel(writer, index=False, sheet_name=sheet_name[:31])
+
+	output.seek(0)
+	return output.getvalue()
 
 
 class WelcomeView(TemplateView):
@@ -177,38 +238,30 @@ class SupplierUploadView(LoginRequiredMixin, View):
 			return render(request, self.template_name, {'form': form, 'supplier': supplier})
 
 		# Prepare data for UI: convert DataFrames to records for session storage
-		def df_records(df):
-			try:
-				records = df.to_dict('records')
-				# Sanitize NaN/None to ensure session JSON serialization and clean UI rendering
-				def clean_val(v):
-					try:
-						# Convert NaN-like to None
-						if v is None:
-							return None
-						sv = str(v).strip().lower()
-						if sv in ('nan', '<na>'):
-							return None
-						return v
-					except Exception:
-						return None
-				return [
-					{k: clean_val(v) for k, v in rec.items()}
-					for rec in records
-				]
-			except Exception:
-				return []
-
-		request.session['comparison_results'] = {
+		comparison_payload = {
 			'supplier_id': supplier.id,
 			'supplier_name': supplier.name,
 			'old_file_name': old_original_name,
 			'new_file_name': new_original_name,
-			'removed_or_out_of_stock': df_records(comparison['removed_or_out_of_stock']),
-			'new_products': df_records(comparison['new_products']),
-			'stock_changes': df_records(comparison['stock_changes']),
-			'price_changes': df_records(comparison['price_changes']),
+			'removed_or_out_of_stock': dataframe_to_records(comparison['removed_or_out_of_stock']),
+			'new_products': dataframe_to_records(comparison['new_products']),
+			'stock_changes': dataframe_to_records(comparison['stock_changes']),
+			'price_changes': dataframe_to_records(comparison['price_changes']),
 		}
+		request.session['comparison_results'] = comparison_payload
+
+		# Automatically persist the last comparison Excel in Supabase storage
+		# This is best-effort only and must not break the existing flow.
+		try:
+			service = get_supabase_storage_service()
+			excel_bytes = build_comparison_excel_bytes(comparison_payload)
+			storage_path = f"user_{request.user.id}/supplier_{supplier.id}/last_comparison.xlsx"
+			service.upload(storage_path, excel_bytes)
+			logger.info('Stored last comparison Excel for supplier %s at %s', supplier.name, storage_path)
+		except SupabaseStorageError as exc:
+			logger.warning('Failed to store last comparison Excel for %s: %s', supplier.name, exc)
+		except Exception as exc:  # pragma: no cover - defensive
+			logger.exception('Unexpected error storing last comparison Excel for %s: %s', supplier.name, exc)
 		messages.success(request, 'File uploaded and comparison completed.')
 		return redirect('supplier_comparison', pk=supplier.id)
 
@@ -235,6 +288,61 @@ class ComparisonResultView(LoginRequiredMixin, View):
 		return render(request, self.template_name, context)
 
 
+class LastComparisonView(LoginRequiredMixin, View):
+	template_name = 'suppliers/comparison.html'
+
+	def get(self, request, pk):
+		supplier = get_object_or_404(Supplier, pk=pk, owner=request.user)
+		storage_path = f"user_{request.user.id}/supplier_{supplier.id}/last_comparison.xlsx"
+		try:
+			service = get_supabase_storage_service()
+			content = service.download(storage_path)
+		except SupabaseStorageError as exc:
+			message = str(exc)
+			if 'File not found' in message:
+				messages.info(request, 'No previous comparison is available for this supplier. Please upload a file.')
+			else:
+				logger.warning('Failed to download last comparison for supplier %s: %s', supplier.name, exc)
+				messages.error(request, 'Could not load the last comparison. Please upload a new file.')
+			return redirect('supplier_upload', pk=supplier.id)
+
+		try:
+			buffer = BytesIO(content)
+			with pd.ExcelFile(buffer) as xls:
+				def read_sheet(sheet_name: str) -> pd.DataFrame:
+					try:
+						return pd.read_excel(xls, sheet_name=sheet_name)
+					except ValueError:
+						# Sheet missing: treat as empty section
+						return pd.DataFrame()
+
+				removed_df = read_sheet('Removed_or_OutOfStock')
+				new_df = read_sheet('New_Products')
+				stock_df = read_sheet('Stock_Changes')
+				price_df = read_sheet('Price_Changes')
+
+			# Rebuild the same structure used by ComparisonResultView / ComparisonDownloadView
+			data = {
+				'supplier_id': supplier.id,
+				'supplier_name': supplier.name,
+				# Original filenames are not embedded in the Excel; mark as unknown.
+				'old_file_name': None,
+				'new_file_name': None,
+				'removed_or_out_of_stock': dataframe_to_records(removed_df),
+				'new_products': dataframe_to_records(new_df),
+				'stock_changes': dataframe_to_records(stock_df),
+				'price_changes': dataframe_to_records(price_df),
+			}
+			request.session['comparison_results'] = data
+		except Exception as exc:  # pragma: no cover - defensive
+			logger.exception('Failed to reconstruct last comparison for supplier %s: %s', supplier.name, exc)
+			messages.error(request, 'Could not read the last comparison file. Please upload a new file.')
+			return redirect('supplier_upload', pk=supplier.id)
+
+		# Reuse the existing comparison view/template via session data
+		return redirect('supplier_comparison', pk=supplier.id)
+
+
 class ComparisonDownloadView(LoginRequiredMixin, View):
 	"""Generate an Excel file with the latest comparison results for download."""
 
@@ -254,29 +362,12 @@ class ComparisonDownloadView(LoginRequiredMixin, View):
 				len(data.get('stock_changes') or []),
 				len(data.get('price_changes') or []),
 			)
-			output = BytesIO()
-			with pd.ExcelWriter(output, engine='openpyxl') as writer:
-				sections = [
-					('removed_or_out_of_stock', 'Removed_or_OutOfStock'),
-					('new_products', 'New_Products'),
-					('stock_changes', 'Stock_Changes'),
-					('price_changes', 'Price_Changes'),
-				]
-				for key, sheet_name in sections:
-					rows = data.get(key) or []
-					# Siempre generamos la hoja, aunque esté vacía, para tener estructura consistente
-					if rows:
-						df = pd.DataFrame(rows)
-					else:
-						df = pd.DataFrame()
-					df.to_excel(writer, index=False, sheet_name=sheet_name[:31])
-
-			output.seek(0)
+			excel_bytes = build_comparison_excel_bytes(data)
 			slug_name = slugify(supplier.name) or f'supplier-{supplier.id}'
 			date_str = timezone.now().strftime('%Y%m%d')
 			filename = f'comparison_{slug_name}_{date_str}.xlsx'
 			response = HttpResponse(
-				output.getvalue(),
+				excel_bytes,
 				content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 			)
 			response['Content-Disposition'] = f'attachment; filename="{filename}"'

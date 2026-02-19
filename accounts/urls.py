@@ -9,6 +9,7 @@ from .views import (
     SupplierUploadView,
     ComparisonResultView,
     ComparisonDownloadView,
+    LastComparisonView,
     SupplierDeleteView,
     SupplierSettingsView,
 )
@@ -24,6 +25,7 @@ urlpatterns = [
     path('suppliers/<int:pk>/upload/', SupplierUploadView.as_view(), name='supplier_upload'),
     path('suppliers/<int:pk>/comparison/', ComparisonResultView.as_view(), name='supplier_comparison'),
     path('suppliers/<int:pk>/comparison/download/', ComparisonDownloadView.as_view(), name='supplier_comparison_download'),
+    path('suppliers/<int:pk>/comparison/last/', LastComparisonView.as_view(), name='supplier_last_comparison'),
     path('suppliers/<int:pk>/settings/', SupplierSettingsView.as_view(), name='supplier_settings'),
     path('suppliers/<int:pk>/delete/', SupplierDeleteView.as_view(), name='supplier_delete'),
 ]
