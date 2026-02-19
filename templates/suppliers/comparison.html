@@ -163,8 +163,9 @@
       </div>
     </section>
   </div>
-  <div style="margin-top:12px;">
-    <a class="btn secondary" href="{% url 'home' %}">Back to Home</a>
+  <div style="margin-top:12px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px;">
+	<a class="btn secondary" href="{% url 'home' %}">Back to Home</a>
+	<a class="btn" href="{% url 'supplier_comparison_download' supplier.id %}">Download Excel</a>
   </div>
 </div>
 {% endblock %}

@@ -1,9 +1,15 @@
 import logging
+from io import BytesIO
+
+import pandas as pd
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm
+from django.http import HttpResponse
 from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse_lazy
+from django.utils import timezone
+from django.utils.text import slugify
 from django.views.generic import TemplateView, FormView, ListView, CreateView, View, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 
@@ -227,6 +233,59 @@ class ComparisonResultView(LoginRequiredMixin, View):
 			'price_changes': data.get('price_changes', []),
 		}
 		return render(request, self.template_name, context)
+
+
+class ComparisonDownloadView(LoginRequiredMixin, View):
+	"""Generate an Excel file with the latest comparison results for download."""
+
+	def get(self, request, pk):
+		supplier = get_object_or_404(Supplier, pk=pk, owner=request.user)
+		data = request.session.get('comparison_results') or {}
+		if not data or data.get('supplier_id') != supplier.id:
+			messages.info(request, 'No comparison data available to export. Please upload a file first.')
+			return redirect('supplier_upload', pk=supplier.id)
+
+		try:
+			logger.info(
+				'Preparing comparison Excel for supplier %s: removed=%d, new=%d, stock_changes=%d, price_changes=%d',
+				supplier.name,
+				len(data.get('removed_or_out_of_stock') or []),
+				len(data.get('new_products') or []),
+				len(data.get('stock_changes') or []),
+				len(data.get('price_changes') or []),
+			)
+			output = BytesIO()
+			with pd.ExcelWriter(output, engine='openpyxl') as writer:
+				sections = [
+					('removed_or_out_of_stock', 'Removed_or_OutOfStock'),
+					('new_products', 'New_Products'),
+					('stock_changes', 'Stock_Changes'),
+					('price_changes', 'Price_Changes'),
+				]
+				for key, sheet_name in sections:
+					rows = data.get(key) or []
+					# Siempre generamos la hoja, aunque esté vacía, para tener estructura consistente
+					if rows:
+						df = pd.DataFrame(rows)
+					else:
+						df = pd.DataFrame()
+					df.to_excel(writer, index=False, sheet_name=sheet_name[:31])
+
+			output.seek(0)
+			slug_name = slugify(supplier.name) or f'supplier-{supplier.id}'
+			date_str = timezone.now().strftime('%Y%m%d')
+			filename = f'comparison_{slug_name}_{date_str}.xlsx'
+			response = HttpResponse(
+				output.getvalue(),
+				content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+			)
+			response['Content-Disposition'] = f'attachment; filename="{filename}"'
+			logger.info('Generated comparison Excel for supplier %s (%s)', supplier.name, filename)
+			return response
+		except Exception as exc:
+			logger.exception('Failed to generate comparison Excel for supplier %s: %s', supplier.name, exc)
+			messages.error(request, 'Ocurrió un error al generar el archivo de comparación. Inténtalo de nuevo más tarde.')
+			return redirect('supplier_comparison', pk=supplier.id)
 
 
 class SupplierDeleteView(LoginRequiredMixin, DeleteView):
