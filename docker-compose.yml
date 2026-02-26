@@ -1,45 +1,20 @@
 version: "3.9"
-services:
-  db:
-    image: postgres:15
-    container_name: stacktracker-db
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: stacktracker
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
+services:
   web:
     build: .
-    container_name: stacktracker-web
-    depends_on:
-      db:
-        condition: service_healthy
+    container_name: stacktracker-web-supabase
+    # Usamos las variables desde el entorno / fichero .env del host
     env_file:
       - .env
     environment:
-      DJANGO_SECRET_KEY: dev-secret-key-change-me
+      # Puedes sobreescribir aquí si quieres valores distintos a los del .env
+      # Dejamos DJANGO_DEBUG en True para entorno local, así no exige
+      # manifest de staticfiles y se comporta como desarrollo.
       DJANGO_DEBUG: "True"
       DJANGO_ALLOWED_HOSTS: 0.0.0.0,localhost
-      DB_NAME: stacktracker
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_HOST: db
-      DB_PORT: 5432
     ports:
       - "8000:8000"
     volumes:
       - .:/app
-    # The image entrypoint runs migrations and then starts the server
     command: python manage.py runserver 0.0.0.0:8000
-
-volumes:
-  pgdata:

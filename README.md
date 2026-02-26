@@ -1,5 +1,7 @@
 # StackTracker
 
+![Tests](../../actions/workflows/tests.yml/badge.svg)
+
 ![StackTracker](assets/stacktracker.png)
 
 ## Table of Contents
@@ -7,6 +9,7 @@
 - [Technologies Used](#technologies-used)
 - [Requirements](#requirements)
 - [Local Use (Docker)](#local-use-docker)
+- [Tests](#tests)
 - [Demo](#demo)
 
 ## Overview
@@ -14,7 +17,7 @@ StackTracker is a web application designed to help small businesses monitor dail
 
 The system allows users to configure supplier-specific Excel schemas, upload daily stock files, and automatically detect product additions, removals, and price updates.
 
-StackTracker focuses on simplicity and clarity, providing a clean interface for non-technical users while maintaining a well-structured backend architecture suitable for scaling.
+StackTracker focuses on simplicity and clarity, providing a clean interface while maintaining a well-structured backend architecture suitable for scaling.
 
 Click [here](https://stacktracker-1.onrender.com/) to try it!
 
@@ -24,11 +27,11 @@ Click [here](https://stacktracker-1.onrender.com/) to try it!
 - **[Docker](https://www.docker.com/)**: Platform for containerization and service deployment.
 - **[Pandas](https://pandas.pydata.org/)**: Python library specialized in data manipulation and analysis.
 
-### Requirements
+## Requirements
 - Python 3.12+
 - Docker + Docker Compose
 
-### Local use (Docker)
+## Local use (Docker)
 
 ```bash
 # Build and start Postgres + Django app
@@ -38,6 +41,30 @@ docker compose up --build
 # App will be available at
 # http://localhost:8000/
 ```
+
+## Tests
+
+To run the tests locally, you need to create a venv and install dependencies first:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+Then, you can run all tests:
+
+```bash
+DJANGO_SETTINGS_MODULE=stacktracker.test_settings python3 manage.py test
+```
+
+If you only want to run selected tests:
+
+```bash
+python3 manage.py test accounts.tests.test_excel_compare_unit
+python3 manage.py test accounts.tests.test_upload_view
+```
+
 
 ## Demo
 Below are several screenshots showcasing key parts of the application:
