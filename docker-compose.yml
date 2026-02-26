@@ -1,10 +1,29 @@
 version: "3.9"
 
 services:
+  db:
+    image: postgres:15
+    container_name: stacktracker-db-local
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: stacktracker
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   web:
     build: .
     container_name: stacktracker-web-supabase
-    # Usamos las variables desde el entorno / fichero .env del host
+    depends_on:
+      db:
+        condition: service_healthy
     env_file:
       - .env
     environment:
@@ -13,8 +32,21 @@ services:
       # manifest de staticfiles y se comporta como desarrollo.
       DJANGO_DEBUG: "True"
       DJANGO_ALLOWED_HOSTS: 0.0.0.0,localhost
+      # Use local-only Django settings (FileSystemStorage for uploads)
+      DJANGO_SETTINGS_MODULE: stacktracker.dev_settings
+      # Force local Postgres (avoid DATABASE_URL pointing to prod)
+      DB_NAME: stacktracker
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_HOST: db
+      DB_PORT: 5432
+      # Make sure an accidental prod DATABASE_URL doesn't take precedence
+      DATABASE_URL: ""
     ports:
       - "8000:8000"
     volumes:
       - .:/app
     command: python manage.py runserver 0.0.0.0:8000
+
+volumes:
+  pgdata:

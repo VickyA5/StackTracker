@@ -1,6 +1,5 @@
-# StackTracker
-
 ![Tests](../../actions/workflows/tests.yml/badge.svg)
+# StackTracker
 
 ![StackTracker](assets/stacktracker.png)
 
@@ -32,6 +31,10 @@ Click [here](https://stacktracker-1.onrender.com/) to try it!
 - Docker + Docker Compose
 
 ## Local use (Docker)
+
+To use this project locally, it uses docker compose with a postgres service and local storage. Files will be stored in `supplier_files`
+
+How to use it:
 
 ```bash
 # Build and start Postgres + Django app
