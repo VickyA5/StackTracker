@@ -189,6 +189,23 @@ class SupplierUploadView(LoginRequiredMixin, View):
 		if supplier.current_file and supplier.current_file.name:
 			try:
 				with supplier.current_file.open('rb') as previous_file:
+					try:
+						prev_name = getattr(previous_file, 'name', None) or supplier.current_file.name
+					except Exception:
+						prev_name = supplier.current_file.name
+					# Read a couple bytes for diagnostics, then rewind.
+					try:
+						header_probe = previous_file.read(16)
+						if hasattr(previous_file, 'seek'):
+							previous_file.seek(0)
+						logger.info(
+							"Reading previous supplier Excel: supplier=%s path=%s head=%s",
+							supplier.name,
+							prev_name,
+							header_probe.hex(),
+						)
+					except Exception as probe_exc:
+						logger.debug("Failed probing previous Excel header bytes: %s", probe_exc)
 					old_df_raw = read_excel_dynamic(previous_file, supplier.product_id_column)
 				old_df = normalize_columns(
 					old_df_raw,
@@ -201,7 +218,15 @@ class SupplierUploadView(LoginRequiredMixin, View):
 				)
 				logger.info('Loaded previous file for supplier %s', supplier.name)
 			except Exception as exc:
-				logger.warning('Failed to read previous file for %s: %s', supplier.name, exc)
+				# Important: if we cannot read the previous file, we should not silently
+				# treat everything as new, because that produces misleading comparisons.
+				logger.exception('Failed to read previous file for %s (path=%s): %s', supplier.name, supplier.current_file.name, exc)
+				messages.error(
+					request,
+					'No se pudo leer el archivo anterior para comparar. Intenta volver a subir el archivo. '
+					'Si el problema persiste, revisa que el archivo sea un .xlsx válido.',
+				)
+				return render(request, self.template_name, {'form': form, 'supplier': supplier})
 
 		# Read new upload into memory before saving
 		try:

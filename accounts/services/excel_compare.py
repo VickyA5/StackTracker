@@ -1,6 +1,7 @@
 import logging
 from typing import Optional, Dict, Any
 import re
+from io import BytesIO
 import pandas as pd
 
 logger = logging.getLogger(__name__)
@@ -29,8 +30,12 @@ def read_excel_dynamic(file_obj, key_col_name: str) -> pd.DataFrame:
     Returns a DataFrame with proper column names and data rows only.
     Raises ValueError if header row cannot be detected.
     """
+    # Pandas sometimes can't infer the Excel engine when the input is a file-like
+    # object with no filename/extension (common with remote storage downloads).
+    # Ensure we operate on a seekable buffer and specify engine explicitly.
+    buffer = _coerce_excel_buffer(file_obj)
     # Read entire sheet without headers
-    df_raw = pd.read_excel(file_obj, header=None, dtype=str)
+    df_raw = pd.read_excel(buffer, header=None, dtype=str, engine="openpyxl")
     header_row = _find_header_row(df_raw, key_col_name)
     if header_row is None:
         raise ValueError(f"Could not detect header row containing '{key_col_name}'.")
@@ -43,6 +48,54 @@ def read_excel_dynamic(file_obj, key_col_name: str) -> pd.DataFrame:
     df = df.dropna(how='all')
     logger.info("Excel read complete: %d rows, %d columns", len(df), len(df.columns))
     return df
+
+
+def _coerce_excel_buffer(file_obj):
+    """Return a seekable file-like object suitable for `pd.read_excel`.
+
+    Accepts bytes/bytearray/memoryview, Django file objects, UploadedFile,
+    or any file-like object. Ensures the returned buffer is seeked to 0.
+    """
+    if file_obj is None:
+        raise ValueError("Excel file object is None")
+
+    # Fast path for raw bytes.
+    if isinstance(file_obj, (bytes, bytearray, memoryview)):
+        bio = BytesIO(bytes(file_obj))
+        bio.seek(0)
+        logger.info("Coerced Excel input from bytes (size=%d).", len(bio.getbuffer()))
+        return bio
+
+    # If it's a file-like object that can be read, keep it unless it's not seekable.
+    if hasattr(file_obj, "read"):
+        # Try to rewind if possible
+        if hasattr(file_obj, "seek"):
+            try:
+                file_obj.seek(0)
+            except Exception:
+                # We'll fall back to buffering below
+                pass
+
+        # Some wrappers are technically seekable but behave oddly after network reads;
+        # buffering into memory makes behaviour deterministic.
+        try:
+            data = file_obj.read()
+        except Exception as exc:
+            logger.exception("Failed reading Excel stream into memory: %s", exc)
+            raise
+
+        if hasattr(file_obj, "seek"):
+            try:
+                file_obj.seek(0)
+            except Exception:
+                pass
+
+        bio = BytesIO(data)
+        bio.seek(0)
+        logger.info("Coerced Excel input from stream (size=%d).", len(data))
+        return bio
+
+    raise ValueError(f"Unsupported Excel input type: {type(file_obj)!r}")
 
 
 def normalize_columns(
